@@ -1,0 +1,27 @@
+# Python 缓存与编译产物
+__pycache__/
+*.py[cod]
+*.pyo
+
+# 虚拟环境 / 依赖目录
+.venv/
+venv/
+env/
+.env/
+
+# IDE/编辑器生成的文件
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# 日志与运行生成的报告/输出
+*.log
+minimized_report.json
+jwxt_min_report.json
+*_minimized.har
+
+# 其他临时文件
+*.tmp
+*.bak
+*.DS_Store

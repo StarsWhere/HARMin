@@ -1,0 +1,12 @@
+[project]
+name = "har-minimizer"
+version = "0.1.0"
+description = "Configurable HAR request minimization CLI"
+requires-python = ">=3.10"
+dependencies = [
+    "requests>=2.31.0",
+    "PyYAML>=6.0.1",
+]
+
+[project.scripts]
+har-minimizer = "har_minimizer.cli:main"

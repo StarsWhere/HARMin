@@ -1,0 +1,83 @@
+# 输入 HAR 路径（支持绝对或相对路径）
+input_har: ./input.har
+# 最小化报告输出路径
+report_path: ./minimized_report.json
+# 可选：导出最小化后的 HAR 路径
+# output_har: ./minimized.har
+
+# 请求筛选规则
+filters:
+  # 仅保留这些 HTTP 方法（空列表表示不过滤）
+  methods: []
+  # 仅保留指定 Host（空列表表示不过滤）
+  hosts: []
+  # 仅保留匹配这些正则的 URL
+  url_regex: []
+  # 可选：仅处理指定区间内的 entry
+  # index_range: [0, 100]
+
+# 执行 scope（可进一步缩小过滤后的请求）
+scope:
+  include_urls: []
+  include_regex: []
+
+# 响应对比策略
+comparator:
+  # 是否要求状态码一致
+  status_code: true
+  # 是否启用响应长度浮动判断
+  length_check: true
+  # 响应长度允许的偏差比例
+  length_tolerance: 0.05
+  # 响应中必须包含的固定字符串
+  need_all: []
+  # 响应中至少需要包含任一的字符串
+  need_any: []
+  # 需要匹配的正则表达式
+  regex: []
+  # 多个策略如何组合：AND/OR
+  logic: AND
+
+# 最小化策略
+minimization:
+  # 执行顺序：先头再体
+  order: ["headers", "body"]
+  headers:
+    # 是否最小化 header
+    enabled: true
+    # 永远保留的 header（不参与删减）
+    protected: ["host", "cookie"]
+    # 忽略不参与测试的 header
+    ignore: ["content-length"]
+    # 候选匹配正则（为空表示全量候选）
+    candidate_regex: []
+  body:
+    # 是否最小化 body
+    enabled: true
+    # 请求体解析模式：auto/json/form/raw
+    body_type: auto
+    # 绝对不可删除的字段
+    protected_keys: []
+    # 仅测试这些字段（为空表示全部）
+    only_keys: []
+    # false 时会保留空字符串占位
+    treat_empty_as_absent: true
+
+# HTTP 客户端配置
+client:
+  # 单次请求超时（秒）
+  timeout: 20
+  # 代理设置（例如 {"http": "...", "https": "..."}）
+  proxies: {}
+  # 是否校验证书
+  verify_tls: true
+  rate_limit:
+    # 每秒最多请求数（None 表示不限）
+    requests_per_second: 1
+    # 并发数上限，当前实现为 1 表示串行
+    max_concurrent: 1
+
+# 单个请求允许的最大尝试次数
+max_rounds_per_request: 200
+# 写回 HAR 时是否添加 `_minimized` 元数据
+update_har_metadata: true
