@@ -66,6 +66,8 @@ minimization:
     only_keys: []
     # false 时会保留空字符串占位
     treat_empty_as_absent: true
+    # 在最小化完成后，逐个尝试将剩余字段值置空再校验（json/form 适用）
+    try_blank_values: false
 
 # HTTP 客户端配置
 client:

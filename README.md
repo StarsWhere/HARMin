@@ -8,6 +8,7 @@
 - **可选去重**：可开启“完全一致请求”去重，按方法 + URL + 请求参数合并重复条目（导出 HAR 也会去重），避免浪费请求次数。
 - **多策略对比**：内置状态码、长度浮动、固定字符串、正则表达式等多种子策略，且支持 AND/OR 组合判断。
 - **ddmin 最小化**：对 header 与 body 参数分别执行分治删减，可设置保护字段、候选正则等，自动缓存成功组合作为回退。
+- **额外置空尝试**：可在最小化后逐个尝试将剩余参数值置空并验证，进一步缩小负载。
 - **报告与导出**：输出 JSON 报告（含原始/最小化统计、响应信息、匹配结果），也能在原 HAR 上写入最小化版本及 `_minimized` 元数据。
 
 ## 快速开始
@@ -34,6 +35,7 @@
 ## 配置提示
 - `minimization.headers` 中的 `protected`/`ignore` 适合放必需头部（如 Cookie），`candidate_regex` 可缩小测试范围。
 - `minimization.body` 支持 `auto` 检测 Content-Type，也可以强制 `json`/`form`/`raw`。当 `treat_empty_as_absent=false` 时，删除的字段会以空字符串保留。
+- 需要进一步压缩请求体时，可开启 `minimization.body.try_blank_values`，最小化结束后会逐个尝试将保留字段的值置空再校验，只保留必须保留原值的字段。
 - `client.rate_limit.requests_per_second` 可防止压测目标接口；当前实现串行执行（`max_concurrent=1`）。
 - `max_rounds_per_request` 用于限制 ddmin 触发的请求次数，避免极端 HAR 引发爆炸式测试。
 - 如需跳过重复请求，可在 `filters.deduplicate_identical` 设为 `true`，会按方法 + URL + 查询参数 + 请求体 去重，仅保留首个出现的条目，导出的 HAR 也会同步去重。

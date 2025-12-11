@@ -37,6 +37,7 @@ class BodyMinConfig:
     protected_keys: List[str] = field(default_factory=list)
     only_keys: List[str] = field(default_factory=list)
     treat_empty_as_absent: bool = True
+    try_blank_values: bool = False
 
 
 @dataclass

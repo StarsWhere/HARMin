@@ -187,6 +187,18 @@ class RequestMinimizer:
                 final_body = request.body_text
                 final_response = baseline
                 matched = True  # 回退至基线请求
+        # 额外尝试将剩余字段值置空
+        if matched and self.config.minimization.body.try_blank_values:
+            blank_attempt = self._try_blank_body_values(
+                request=request,
+                headers=final_headers,
+                baseline=baseline,
+                body_kind=body_kind,
+                current_body=final_body,
+            )
+            if blank_attempt is not None:
+                final_body, final_response = blank_attempt
+                matched = self.comparator.equivalent(baseline, final_response)
         final_body_fields = count_body_fields(body_kind, final_body)
         result = MinimizationResult(
             headers=final_headers,
@@ -291,3 +303,59 @@ class RequestMinimizer:
         if final_body is None:
             final_body = _build_body_text(kind, build_body(minimized))
         return final_body, len(candidate_items), best_state, tests
+
+    def _try_blank_body_values(
+        self,
+        request: RequestData,
+        headers: List[Dict[str, str]],
+        baseline: ResponseSnapshot,
+        body_kind: str,
+        current_body: Optional[str],
+    ) -> Optional[Tuple[Optional[str], ResponseSnapshot]]:
+        if body_kind not in {"json", "form"} or not current_body:
+            return None
+        cfg = self.config.minimization.body
+        try:
+            if body_kind == "json":
+                parsed = json.loads(current_body) if current_body else {}
+                if not isinstance(parsed, dict):
+                    return None
+            else:
+                parsed = dict(parse_qsl(current_body, keep_blank_values=True))
+        except json.JSONDecodeError:
+            return None
+        protected = set(cfg.protected_keys)
+        only = set(cfg.only_keys) if cfg.only_keys else None
+        candidate_keys = [k for k in parsed.keys() if k not in protected and (not only or k in only)]
+        if not candidate_keys:
+            return None
+        best_state: Tuple[Optional[str], Optional[ResponseSnapshot]] = (current_body, None)
+
+        def build_body(active_keys: List[str]) -> Dict[str, str]:
+            # active_keys = 保留原值的键，其余置空
+            body_map = dict(parsed)
+            keep = set(active_keys)
+            for key in candidate_keys:
+                if key not in keep:
+                    body_map[key] = ""
+            return body_map
+
+        def test(active_keys: List[str]) -> bool:
+            nonlocal best_state
+            body_map = build_body(active_keys)
+            body_text = _build_body_text(body_kind, body_map)
+            response = self.client.send(request, _headers_list_to_dict(headers), body_text)
+            if self.comparator.equivalent(baseline, response):
+                best_state = (body_text, response)
+                return True
+            return False
+
+        minimized_keep, _ = _ddmin(candidate_keys, test, None)
+        body_map = build_body(minimized_keep)
+        body_text = _build_body_text(body_kind, body_map)
+        response = self.client.send(request, _headers_list_to_dict(headers), body_text)
+        if self.comparator.equivalent(baseline, response):
+            best_state = (body_text, response)
+        if best_state[1] and best_state[0] != current_body:
+            return best_state  # 返回更精简且校验通过的版本
+        return None
