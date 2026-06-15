@@ -1,5 +1,31 @@
 # HAR 最小负载最小化工具
 
+<!-- starswhere-docs-overview -->
+
+## 项目概览
+
+**定位**：一个 Python HAR 最小化与请求对比工具，用于从浏览器录制流量中定位必要请求集合。
+
+**核心功能**：
+- 加载和过滤 HAR 请求
+- 执行请求对比与最小化流程
+- 生成报告和模型化结果
+- 提供 YAML 示例配置和 CLI 入口
+
+**技术栈**：Python、HTTP 客户端、YAML 配置；Python 环境建议使用 uv。
+
+**目录与模块**：`har_minimizer/cli.py` 是命令行入口；`orchestrator.py` 编排流程；`filtering`、`comparator`、`reporting` 分别处理过滤、对比和报告。
+
+**使用方式**：使用 `uv` 按 `pyproject.toml` 或 `requirements.txt` 准备环境，再参考 `example_config.yaml` 运行 CLI。
+
+**配置说明**：`example_config.yaml` 展示目标 URL、过滤条件和对比策略。
+
+**适用场景**：适合接口逆向前的流量整理、回放链路精简和自动化请求分析。
+
+**注意事项**：HAR 数据含敏感信息，分析前应脱敏并避免提交真实令牌。
+
+<!-- /starswhere-docs-overview -->
+
 这是一个可配置的 HAR 请求最小化实验框架。它会批量读取 HAR 中的请求，按配置筛选目标接口，自动尝试删减请求头与请求体参数，并通过可配置的对比策略判定是否与基线响应一致，最终输出最小负载报告，并可选写回新的 HAR 文件。
 
 ## 功能概览
